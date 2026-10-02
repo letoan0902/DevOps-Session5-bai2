@@ -1,0 +1,5 @@
+feat: hoan thien module authentication
+
+- khoi tao module auth voi ham login
+- sua loi chinh ta trong thong bao loi
+- bo sung ham tien ich validateEmail va hashPassword

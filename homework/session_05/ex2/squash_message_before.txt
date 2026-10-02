@@ -1,0 +1,29 @@
+# This is a combination of 3 commits.
+# This is the 1st commit message:
+
+feat: khoi tao module auth
+
+# This is the commit message #2:
+
+fix typo
+
+# This is the commit message #3:
+
+adds utility functions
+
+# Please enter the commit message for your changes. Lines starting
+# with '#' will be ignored, and an empty message aborts the commit.
+#
+# Date:      Fri Oct 2 12:47:59 2026 +0700
+#
+# interactive rebase in progress; onto fb70247
+# Last commands done (3 commands done):
+#    squash 145fbeb fix typo
+#    squash 107b139 adds utility functions
+# Next command to do (1 remaining command):
+#    drop d76d486 add temp file for debug
+# You are currently rebasing branch 'feature/auth' on 'fb70247'.
+#
+# Changes to be committed:
+#	new file:   auth.js
+#

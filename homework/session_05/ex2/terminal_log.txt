@@ -1,0 +1,462 @@
+# Nhat ky terminal that - Bai 2 Session 05 (Interactive Rebase)
+# Moi truong: Windows 11, Git Bash. Output duoc ghi nguyen van tu lan chay thuc te.
+# Thu muc lam viec: /d/Rikkei/DevOps/Session5/_demo/bai2/rebase-interactive-demo
+# Luu y: Git in tien trinh "Rebasing (n/m)" bang ky tu CR (ghi de len cung mot dong tren terminal); trong file nay CR duoc doi thanh xuong dong LF, noi dung khong doi.
+
+$ git --version
+git version 2.49.0.windows.1
+
+=== BUOC 1: Khoi tao repo, cau hinh, commit nen, tao nhanh feature/auth ===
+$ mkdir rebase-interactive-demo && cd rebase-interactive-demo
+
+$ git init -b main
+Initialized empty Git repository in D:/Rikkei/DevOps/Session5/_demo/bai2/rebase-interactive-demo/.git/
+
+$ git config user.name "Lê Toàn"
+
+$ git config user.email "trinhhanh261293@gmail.com"
+
+$ git config core.autocrlf false
+
+$ git config --local --list | grep -E "^(user|core.autocrlf)"
+core.autocrlf=false
+user.name=Lê Toàn
+user.email=trinhhanh261293@gmail.com
+
+$ printf "# Rebase Interactive Demo\n" > README.md
+
+$ git add README.md
+
+$ git commit -m "chore: khoi tao du an"
+[main (root-commit) fb70247] chore: khoi tao du an
+ 1 file changed, 1 insertion(+)
+ create mode 100644 README.md
+
+$ git switch -c feature/auth
+Switched to a new branch 'feature/auth'
+
+=== BUOC 2: Tao 4 commit tren feature/auth ===
+$ cat > auth.js <<"JS"
+// Module authentication
+function login(username, password) {
+  if (!username || !password) {
+    return { ok: false, message: "Invalid credentails" };
+  }
+  return { ok: true, message: "Login success" };
+}
+
+module.exports = { login };
+JS
+
+$ git add auth.js
+
+$ git commit -m "feat: khoi tao module auth"
+[feature/auth fc4014a] feat: khoi tao module auth
+ 1 file changed, 9 insertions(+)
+ create mode 100644 auth.js
+
+$ sed -i "s/credentails/credentials/" auth.js
+
+$ git diff
+diff --git a/auth.js b/auth.js
+index bc9d3a5..c4c73a4 100644
+--- a/auth.js
++++ b/auth.js
+@@ -1,7 +1,7 @@
+ // Module authentication
+ function login(username, password) {
+   if (!username || !password) {
+-    return { ok: false, message: "Invalid credentails" };
++    return { ok: false, message: "Invalid credentials" };
+   }
+   return { ok: true, message: "Login success" };
+ }
+
+$ git add auth.js
+
+$ git commit -m "fix typo"
+[feature/auth 145fbeb] fix typo
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+$ cat > auth.js <<"JS"
+// Module authentication
+function login(username, password) {
+  if (!username || !password) {
+    return { ok: false, message: "Invalid credentials" };
+  }
+  return { ok: true, message: "Login success" };
+}
+
+function validateEmail(email) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
+function hashPassword(password) {
+  // Gia lap: dao nguoc chuoi, chi dung de demo
+  return "hashed_" + password.split("").reverse().join("");
+}
+
+module.exports = { login, validateEmail, hashPassword };
+JS
+
+$ git add auth.js
+
+$ git commit -m "adds utility functions"
+[feature/auth 107b139] adds utility functions
+ 1 file changed, 10 insertions(+), 1 deletion(-)
+
+$ printf "debug output - file rac thu nghiem\n" > temp.txt
+
+$ git add temp.txt
+
+$ git commit -m "add temp file for debug"
+[feature/auth d76d486] add temp file for debug
+ 1 file changed, 1 insertion(+)
+ create mode 100644 temp.txt
+
+$ git log --oneline
+d76d486 add temp file for debug
+107b139 adds utility functions
+145fbeb fix typo
+fc4014a feat: khoi tao module auth
+fb70247 chore: khoi tao du an
+
+$ git log --oneline main..feature/auth
+d76d486 add temp file for debug
+107b139 adds utility functions
+145fbeb fix typo
+fc4014a feat: khoi tao module auth
+
+$ ls
+README.md
+auth.js
+temp.txt
+
+=== BUOC 3: Interactive rebase (pick, squash, squash, drop) ===
+$ GIT_SEQUENCE_EDITOR="bash /d/Rikkei/DevOps/Session5/_demo/bai2/seq_editor.sh" GIT_EDITOR="bash /d/Rikkei/DevOps/Session5/_demo/bai2/msg_editor.sh" git rebase -i HEAD~4
+Rebasing (2/4)
+Rebasing (3/4)
+[detached HEAD 098eeca] feat: hoan thien module authentication
+ Date: Fri Oct 2 12:47:59 2026 +0700
+ 1 file changed, 18 insertions(+)
+ create mode 100644 auth.js
+Rebasing (4/4)
+Successfully rebased and updated refs/heads/feature/auth.
+
+=== BUOC 4: Kiem tra ket qua ===
+$ git log --oneline
+098eeca feat: hoan thien module authentication
+fb70247 chore: khoi tao du an
+
+$ git log --oneline main..feature/auth
+098eeca feat: hoan thien module authentication
+
+$ git log -n 1
+commit 098eecae4ca8b52cf7f405f027b53bdad7ffdcee
+Author: Lê Toàn <trinhhanh261293@gmail.com>
+Date:   Fri Oct 2 12:47:59 2026 +0700
+
+    feat: hoan thien module authentication
+    
+    - khoi tao module auth voi ham login
+    - sua loi chinh ta trong thong bao loi
+    - bo sung ham tien ich validateEmail va hashPassword
+
+$ git show --stat HEAD
+commit 098eecae4ca8b52cf7f405f027b53bdad7ffdcee
+Author: Lê Toàn <trinhhanh261293@gmail.com>
+Date:   Fri Oct 2 12:47:59 2026 +0700
+
+    feat: hoan thien module authentication
+    
+    - khoi tao module auth voi ham login
+    - sua loi chinh ta trong thong bao loi
+    - bo sung ham tien ich validateEmail va hashPassword
+
+ auth.js | 18 ++++++++++++++++++
+ 1 file changed, 18 insertions(+)
+
+$ ls
+README.md
+auth.js
+
+$ cat auth.js
+// Module authentication
+function login(username, password) {
+  if (!username || !password) {
+    return { ok: false, message: "Invalid credentials" };
+  }
+  return { ok: true, message: "Login success" };
+}
+
+function validateEmail(email) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
+function hashPassword(password) {
+  // Gia lap: dao nguoc chuoi, chi dung de demo
+  return "hashed_" + password.split("").reverse().join("");
+}
+
+module.exports = { login, validateEmail, hashPassword };
+
+$ git reflog -n 10
+098eeca HEAD@{0}: rebase (finish): returning to refs/heads/feature/auth
+098eeca HEAD@{1}: rebase (squash): feat: hoan thien module authentication
+144b9b2 HEAD@{2}: rebase (squash): # This is a combination of 2 commits.
+fc4014a HEAD@{3}: rebase (start): checkout HEAD~4
+d76d486 HEAD@{4}: commit: add temp file for debug
+107b139 HEAD@{5}: commit: adds utility functions
+145fbeb HEAD@{6}: commit: fix typo
+fc4014a HEAD@{7}: commit: feat: khoi tao module auth
+fb70247 HEAD@{8}: checkout: moving from main to feature/auth
+fb70247 HEAD@{9}: commit (initial): chore: khoi tao du an
+
+$ git status
+On branch feature/auth
+nothing to commit, working tree clean
+
+=== BUOC 4b: Tham chieu ORIG_HEAD (phuc vu hoan tac) ===
+$ git rev-parse ORIG_HEAD
+d76d48661a9573e2d991f4497d8ca9feeec49637
+
+$ git log --oneline ORIG_HEAD
+d76d486 add temp file for debug
+107b139 adds utility functions
+145fbeb fix typo
+fc4014a feat: khoi tao module auth
+fb70247 chore: khoi tao du an
+
+=== BUOC 5: Trinh dien reword ===
+$ printf "\nModule auth cung cap login, validateEmail, hashPassword.\n" >> README.md
+
+$ git add README.md
+
+$ git commit -m "update"
+[feature/auth d1b1bef] update
+ 1 file changed, 2 insertions(+)
+
+$ git log --oneline
+d1b1bef update
+098eeca feat: hoan thien module authentication
+fb70247 chore: khoi tao du an
+
+$ GIT_SEQUENCE_EDITOR="bash /d/Rikkei/DevOps/Session5/_demo/bai2/reword_seq_editor.sh" GIT_EDITOR="bash /d/Rikkei/DevOps/Session5/_demo/bai2/reword_msg_editor.sh" git rebase -i HEAD~1
+Rebasing (1/1)
+[detached HEAD 344eb4c] docs: bo sung huong dan su dung module auth
+ Date: Fri Oct 2 12:48:02 2026 +0700
+ 1 file changed, 2 insertions(+)
+Successfully rebased and updated refs/heads/feature/auth.
+
+$ git log --oneline
+344eb4c docs: bo sung huong dan su dung module auth
+098eeca feat: hoan thien module authentication
+fb70247 chore: khoi tao du an
+
+$ git status
+On branch feature/auth
+nothing to commit, working tree clean
+
+
+=== PHU LUC: Noi dung file todo va thong diep (man hinh soan thao) ===
+$ cat rebase_todo_before.txt
+pick fc4014a feat: khoi tao module auth
+pick 145fbeb fix typo
+pick 107b139 adds utility functions
+pick d76d486 add temp file for debug
+
+# Rebase fb70247..d76d486 onto fb70247 (4 commands)
+#
+# Commands:
+# p, pick <commit> = use commit
+# r, reword <commit> = use commit, but edit the commit message
+# e, edit <commit> = use commit, but stop for amending
+# s, squash <commit> = use commit, but meld into previous commit
+# f, fixup [-C | -c] <commit> = like "squash" but keep only the previous
+#                    commit's log message, unless -C is used, in which case
+#                    keep only this commit's message; -c is same as -C but
+#                    opens the editor
+# x, exec <command> = run command (the rest of the line) using shell
+# b, break = stop here (continue rebase later with 'git rebase --continue')
+# d, drop <commit> = remove commit
+# l, label <label> = label current HEAD with a name
+# t, reset <label> = reset HEAD to a label
+# m, merge [-C <commit> | -c <commit>] <label> [# <oneline>]
+#         create a merge commit using the original merge commit's
+#         message (or the oneline, if no original merge commit was
+#         specified); use -c <commit> to reword the commit message
+# u, update-ref <ref> = track a placeholder for the <ref> to be updated
+#                       to this position in the new commits. The <ref> is
+#                       updated at the end of the rebase
+#
+# These lines can be re-ordered; they are executed from top to bottom.
+#
+# If you remove a line here THAT COMMIT WILL BE LOST.
+#
+# However, if you remove everything, the rebase will be aborted.
+#
+
+$ cat rebase_todo_after.txt
+pick fc4014a feat: khoi tao module auth
+squash 145fbeb fix typo
+squash 107b139 adds utility functions
+drop d76d486 add temp file for debug
+
+# Rebase fb70247..d76d486 onto fb70247 (4 commands)
+#
+# Commands:
+# p, pick <commit> = use commit
+# r, reword <commit> = use commit, but edit the commit message
+# e, edit <commit> = use commit, but stop for amending
+# s, squash <commit> = use commit, but meld into previous commit
+# f, fixup [-C | -c] <commit> = like "squash" but keep only the previous
+#                    commit's log message, unless -C is used, in which case
+#                    keep only this commit's message; -c is same as -C but
+#                    opens the editor
+# x, exec <command> = run command (the rest of the line) using shell
+# b, break = stop here (continue rebase later with 'git rebase --continue')
+# d, drop <commit> = remove commit
+# l, label <label> = label current HEAD with a name
+# t, reset <label> = reset HEAD to a label
+# m, merge [-C <commit> | -c <commit>] <label> [# <oneline>]
+#         create a merge commit using the original merge commit's
+#         message (or the oneline, if no original merge commit was
+#         specified); use -c <commit> to reword the commit message
+# u, update-ref <ref> = track a placeholder for the <ref> to be updated
+#                       to this position in the new commits. The <ref> is
+#                       updated at the end of the rebase
+#
+# These lines can be re-ordered; they are executed from top to bottom.
+#
+# If you remove a line here THAT COMMIT WILL BE LOST.
+#
+# However, if you remove everything, the rebase will be aborted.
+#
+
+$ cat squash_message_before.txt
+# This is a combination of 3 commits.
+# This is the 1st commit message:
+
+feat: khoi tao module auth
+
+# This is the commit message #2:
+
+fix typo
+
+# This is the commit message #3:
+
+adds utility functions
+
+# Please enter the commit message for your changes. Lines starting
+# with '#' will be ignored, and an empty message aborts the commit.
+#
+# Date:      Fri Oct 2 12:47:59 2026 +0700
+#
+# interactive rebase in progress; onto fb70247
+# Last commands done (3 commands done):
+#    squash 145fbeb fix typo
+#    squash 107b139 adds utility functions
+# Next command to do (1 remaining command):
+#    drop d76d486 add temp file for debug
+# You are currently rebasing branch 'feature/auth' on 'fb70247'.
+#
+# Changes to be committed:
+#	new file:   auth.js
+#
+
+$ cat squash_message_after.txt
+feat: hoan thien module authentication
+
+- khoi tao module auth voi ham login
+- sua loi chinh ta trong thong bao loi
+- bo sung ham tien ich validateEmail va hashPassword
+
+$ cat reword_todo_before.txt
+pick d1b1bef update
+
+# Rebase 098eeca..d1b1bef onto 098eeca (1 command)
+#
+# Commands:
+# p, pick <commit> = use commit
+# r, reword <commit> = use commit, but edit the commit message
+# e, edit <commit> = use commit, but stop for amending
+# s, squash <commit> = use commit, but meld into previous commit
+# f, fixup [-C | -c] <commit> = like "squash" but keep only the previous
+#                    commit's log message, unless -C is used, in which case
+#                    keep only this commit's message; -c is same as -C but
+#                    opens the editor
+# x, exec <command> = run command (the rest of the line) using shell
+# b, break = stop here (continue rebase later with 'git rebase --continue')
+# d, drop <commit> = remove commit
+# l, label <label> = label current HEAD with a name
+# t, reset <label> = reset HEAD to a label
+# m, merge [-C <commit> | -c <commit>] <label> [# <oneline>]
+#         create a merge commit using the original merge commit's
+#         message (or the oneline, if no original merge commit was
+#         specified); use -c <commit> to reword the commit message
+# u, update-ref <ref> = track a placeholder for the <ref> to be updated
+#                       to this position in the new commits. The <ref> is
+#                       updated at the end of the rebase
+#
+# These lines can be re-ordered; they are executed from top to bottom.
+#
+# If you remove a line here THAT COMMIT WILL BE LOST.
+#
+# However, if you remove everything, the rebase will be aborted.
+#
+
+$ cat reword_todo_after.txt
+reword d1b1bef update
+
+# Rebase 098eeca..d1b1bef onto 098eeca (1 command)
+#
+# Commands:
+# p, pick <commit> = use commit
+# r, reword <commit> = use commit, but edit the commit message
+# e, edit <commit> = use commit, but stop for amending
+# s, squash <commit> = use commit, but meld into previous commit
+# f, fixup [-C | -c] <commit> = like "squash" but keep only the previous
+#                    commit's log message, unless -C is used, in which case
+#                    keep only this commit's message; -c is same as -C but
+#                    opens the editor
+# x, exec <command> = run command (the rest of the line) using shell
+# b, break = stop here (continue rebase later with 'git rebase --continue')
+# d, drop <commit> = remove commit
+# l, label <label> = label current HEAD with a name
+# t, reset <label> = reset HEAD to a label
+# m, merge [-C <commit> | -c <commit>] <label> [# <oneline>]
+#         create a merge commit using the original merge commit's
+#         message (or the oneline, if no original merge commit was
+#         specified); use -c <commit> to reword the commit message
+# u, update-ref <ref> = track a placeholder for the <ref> to be updated
+#                       to this position in the new commits. The <ref> is
+#                       updated at the end of the rebase
+#
+# These lines can be re-ordered; they are executed from top to bottom.
+#
+# If you remove a line here THAT COMMIT WILL BE LOST.
+#
+# However, if you remove everything, the rebase will be aborted.
+#
+
+$ cat reword_message_before.txt
+update
+
+# Please enter the commit message for your changes. Lines starting
+# with '#' will be ignored, and an empty message aborts the commit.
+#
+# Date:      Fri Oct 2 12:48:02 2026 +0700
+#
+# interactive rebase in progress; onto 098eeca
+# Last command done (1 command done):
+#    reword d1b1bef update
+# No commands remaining.
+# You are currently editing a commit while rebasing branch 'feature/auth' on '098eeca'.
+#
+# Changes to be committed:
+#	modified:   README.md
+#
+
+$ cat reword_message_after.txt
+docs: bo sung huong dan su dung module auth
+
